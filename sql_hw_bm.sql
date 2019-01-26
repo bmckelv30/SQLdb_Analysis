@@ -191,13 +191,13 @@ SELECT title,
 	FROM inventory
     JOIN film
     USING (film_id);
-# FIX - How to dedupe? Seems to be subsetting store_id
+# FIX - How to dedupe? 
 SELECT * FROM film;
 SELECT f.title,
 		SUM(r.inventory_id) AS frequency
 	FROM inventory i
     RIGHT OUTER JOIN film f ON f.film_id=i.film_id
     INNER JOIN rental r ON r.inventory_id=i.inventory_id
-    GROUP BY r.inventory_id
+    GROUP BY f.film_id
     ORDER BY frequency DESC
 ;
