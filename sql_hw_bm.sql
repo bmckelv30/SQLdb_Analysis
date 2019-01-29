@@ -65,12 +65,9 @@ UPDATE actor
 	SET first_name = "HARPO"
 	WHERE first_name = "GROUCHO" AND last_name = "WILLIAMS";
 # 5a.
-# Reference: Reverse Engineer option, view diagram of `address` table
 SHOW CREATE TABLE address;
 # 6a.
-SELECT * FROM address;	# address_id
-SELECT * FROM staff;	# staff_id, address_id (foreign key)
-# Use `JOIN` to display
+	# Use `JOIN` to display
 SELECT s.first_name, 
 		s.last_name, 
         a.address
@@ -78,8 +75,7 @@ SELECT s.first_name,
     JOIN staff s 
     USING (address_id);
 # 6b.
-SELECT * FROM payment; 	# payment_id, customer_id, staff_id, amount
-# Use `JOIN` to display 
+	# Use `JOIN` to display 
 SELECT s.first_name, 
 		s.last_name, 
         SUM(p.amount) 
@@ -89,9 +85,7 @@ SELECT s.first_name,
     WHERE p.payment_date LIKE "2005-08%"
     GROUP BY p.staff_id;
 # 6c.
-SELECT * FROM film; # film_id, title
-SELECT * FROM film_actor; # actor_id (for count), film_id (for join)
-# Use `JOIN` to display 
+	# Use `JOIN` to display 
 SELECT f.title, 
 		COUNT(fa.actor_id)
 	FROM film f
@@ -100,9 +94,7 @@ SELECT f.title,
     GROUP BY fa.actor_id
 ; 
 # 6d. 
-SELECT * FROM film; # film_id, title
-SELECT * FROM inventory; # inventory_id, film_id (for count), film_id (for join)
-# Use `JOIN` to display 
+	# Use `JOIN` to display 
 SELECT f.title, 
 		COUNT(i.film_id)
 	FROM film f
@@ -112,8 +104,6 @@ SELECT f.title,
     GROUP BY i.film_id
 ;
 # 6e.
-SELECT * FROM payment; # customer_id, amount
-SELECT * FROM customer; # customer_id, first_name, last_name
 SELECT first_name, 
 		last_name, `Total Amount Paid` FROM (
 										SELECT customer_id, 
@@ -126,9 +116,7 @@ SELECT first_name,
     ;
 
 # 7a.
-SELECT * FROM film; # film_id, title
-SELECT * FROM language; 
-# Use `JOIN` to display 
+	# Use `JOIN` to display 
 SELECT title, 
 		name
 	FROM film f
@@ -138,7 +126,6 @@ SELECT title,
 			f.title LIKE "Q%" OR
             f.title LIKE "K%"
 ;
-       
 # 7b.
 SELECT first_name, 
 		last_name
@@ -149,7 +136,6 @@ SELECT first_name,
 						FROM film
 						WHERE title="Alone Trip")
 ;
-
 # 7c.
 SELECT first_name, 
 		last_name, 
@@ -163,7 +149,6 @@ SELECT first_name,
 						 USING (country_id)
 						 WHERE co.country = "Canada")
 ;
- 
 # 7d. 
 SELECT title
 	FROM film f
@@ -175,24 +160,7 @@ SELECT title
 						 USING (category_id)
 						 WHERE ct.name = "Family")
  ;
-# 7e. NEEDS MORE WORK!!
-SELECT * FROM rental;
-# Test - Query to obtain most frequently rented movies in desc order
-SELECT rental_id, 
-		SUM(inventory_id) AS frequency
-	FROM rental
-    GROUP BY inventory_id
-    ORDER BY frequency DESC;
-# Test - Query to obtain film title
-SELECT * FROM inventory;
-SELECT title, 
-		film_id, 
-        inventory_id
-	FROM inventory
-    JOIN film
-    USING (film_id);
-# FIX - How to dedupe? 
-SELECT * FROM film;
+# 7e. 
 SELECT f.title,
 		SUM(r.inventory_id) AS frequency
 	FROM inventory i
@@ -201,3 +169,68 @@ SELECT f.title,
     GROUP BY f.film_id
     ORDER BY frequency DESC
 ;
+# 7f.
+SELECT * FROM payment;
+	# amount
+SELECT SUM(amount) AS total
+	FROM payment
+    GROUP BY staff_id;
+SELECT * FROM store;
+	# store_id, manager_staff_id
+SELECT * FROM staff;
+SELECT s.store_id,
+		FORMAT(SUM(p.amount), 'C', 'en-US') AS total_business
+	FROM payment p
+    JOIN store s ON p.staff_id=s.manager_staff_id
+    GROUP BY s.store_id
+    ORDER BY s.store_id
+;
+# 7g.
+SELECT s.store_id,
+		ct.city,
+		co.country
+	FROM store s
+    JOIN address a
+		USING (address_id)
+	JOIN city ct
+		USING (city_id)
+    JOIN country co
+		USING (country_id)
+;
+# 7h.
+SELECT c.name,
+		SUM(p.amount) AS revenue
+	FROM category c 
+    JOIN film_category fc
+		USING (category_id)
+	JOIN inventory i
+		USING(film_id)
+	JOIN rental r
+		USING (inventory_id)
+	JOIN payment p
+		USING (rental_id)
+	GROUP BY name
+    ORDER BY revenue DESC
+    LIMIT 5
+;
+# 8a.
+CREATE VIEW top_five_genres AS
+	SELECT c.name,
+			SUM(p.amount) AS revenue
+		FROM category c 
+		JOIN film_category fc
+			USING (category_id)
+		JOIN inventory i
+			USING(film_id)
+		JOIN rental r
+			USING (inventory_id)
+		JOIN payment p
+			USING (rental_id)
+		GROUP BY name
+		ORDER BY revenue DESC
+		LIMIT 5
+;
+# 8b.
+SELECT * FROM top_five_genres;
+# 8c.
+DROP VIEW top_five_genres;
