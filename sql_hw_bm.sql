@@ -116,15 +116,13 @@ SELECT first_name,
     ;
 
 # 7a.
-	# Use `JOIN` to display 
-SELECT title, 
-		name
-	FROM film f
-    JOIN language l
-    USING (language_id)
-    WHERE f.language_id=1 AND 
-			f.title LIKE "Q%" OR
-            f.title LIKE "K%"
+SELECT title
+	FROM film
+    WHERE language_id IN (SELECT language_id 
+							FROM language 
+							WHERE name="English") AND 
+            title LIKE "Q%" OR 
+            title LIKE "K%"
 ;
 # 7b.
 SELECT first_name, 
@@ -162,7 +160,7 @@ SELECT title
  ;
 # 7e. 
 SELECT f.title,
-		SUM(r.inventory_id) AS frequency
+		COUNT(r.inventory_id) AS frequency
 	FROM inventory i
     RIGHT OUTER JOIN film f ON f.film_id=i.film_id
     INNER JOIN rental r ON r.inventory_id=i.inventory_id
@@ -170,14 +168,6 @@ SELECT f.title,
     ORDER BY frequency DESC
 ;
 # 7f.
-SELECT * FROM payment;
-	# amount
-SELECT SUM(amount) AS total
-	FROM payment
-    GROUP BY staff_id;
-SELECT * FROM store;
-	# store_id, manager_staff_id
-SELECT * FROM staff;
 SELECT s.store_id,
 		FORMAT(SUM(p.amount), 'C', 'en-US') AS total_business
 	FROM payment p
